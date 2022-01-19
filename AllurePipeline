@@ -1,0 +1,41 @@
+pipeline {
+    agent {
+        label 'master'
+    }
+
+    stages {
+        stage('Checkout') {
+            //////
+        }
+
+        stage('Test') {
+            steps {
+                withAllureUpload(
+                        ////
+                ) {
+                    sh("./gradlew clean test ")
+                    script {
+                        allureLink = "http://<<ALLURE_EE_URL>>:8080/launch/${ALLURE_LAUNCH_ID}"
+                    }
+                }
+
+            }
+        }
+    }
+
+    post {
+        always {
+            slackSend(
+                    color: "good",
+                    message: ("${env.JOB_NAME} " +
+                            "#${env.BUILD_NUMBER} " +
+                            "${currentBuild.currentResult} after " +
+                            "${currentBuild.durationString.minus(' and counting')} " +
+                            "(<${env.BUILD_URL}|Log>) " +
+                            "(<$allureLink|Allure>)"
+                    )
+            )
+        }
+    }
+
+}
